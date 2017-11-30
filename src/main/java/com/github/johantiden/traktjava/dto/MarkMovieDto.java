@@ -1,24 +1,22 @@
 package com.github.johantiden.traktjava.dto;
 
-import com.github.johantiden.traktjava.internal.EpisodeId;
-
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-public class MarkDto {
+public class MarkMovieDto {
 
-    private final SendEpisodeDto episode;
+    private final SendMovieDto episode;
     private final int progress = 100;
     private final String app_version = "1.0";
     private final String app_date;
 
-    public MarkDto(Instant instant, EpisodeId id) {
+    public MarkMovieDto(Instant instant, int movieTraktId) {
         this.app_date = DateTimeFormatter.ofPattern("YYYY-MM-dd").withZone(ZoneId.systemDefault()).format(instant);
-        this.episode = new SendEpisodeDto(id.id);
+        this.episode = new SendMovieDto(movieTraktId);
     }
 
-    public SendEpisodeDto getEpisode() {
+    public SendMovieDto getEpisode() {
         return episode;
     }
 

@@ -57,6 +57,15 @@ public class TraktHttpClient {
                 .build();
     }
 
+    private HttpUriRequest buildDelete(String url, TraktToken token) {
+        return RequestBuilder.delete(url)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Bearer " + token.getToken())
+                .addHeader("trakt-api-version", "2")
+                .addHeader("trakt-api-key", clientId)
+                .build();
+    }
+
     public <T> T post(String url, TraktToken traktToken, Object body, TypeReference<T> typeLiteral) {
         String bodyString;
         try {
@@ -117,4 +126,8 @@ public class TraktHttpClient {
         }
     }
 
+    public void delete(String url, TraktToken traktToken) {
+        HttpUriRequest httpUriRequest = buildDelete(url, traktToken);
+        executeToString(httpUriRequest);
+    }
 }
