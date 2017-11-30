@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Date;
 
-public class HiddenShowDto {
+public class HiddenMediaDto {
 
     public final Date hiddenAt;
     public final String type;
     public final InnerShowDto show;
 
     @JsonCreator
-    public HiddenShowDto(
+    public HiddenMediaDto(
             @JsonProperty("hidden_at") Date hiddenAt,
             @JsonProperty("type") String type,
             @JsonProperty("show") InnerShowDto show

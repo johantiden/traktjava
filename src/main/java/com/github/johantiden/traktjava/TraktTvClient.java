@@ -5,10 +5,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.johantiden.traktjava.cache.CacheClient;
 import com.github.johantiden.traktjava.dto.AddHiddenShowDto;
 import com.github.johantiden.traktjava.dto.EpisodeDto;
-import com.github.johantiden.traktjava.dto.HiddenShowDto;
+import com.github.johantiden.traktjava.dto.HiddenMediaDto;
 import com.github.johantiden.traktjava.dto.MarkDto;
 import com.github.johantiden.traktjava.dto.ShowProgressDto;
 import com.github.johantiden.traktjava.dto.ShowSummaryDto;
+import com.github.johantiden.traktjava.dto.WatchListMovieDto;
 import com.github.johantiden.traktjava.dto.WatchedShowDto;
 import com.github.johantiden.traktjava.internal.EpisodeId;
 import com.github.johantiden.traktjava.internal.TraktHttpClient;
@@ -41,23 +42,42 @@ public class TraktTvClient {
                                             traktToken,
                                             new TypeReference<List<WatchedShowDto>>() {});
 
-        List<WatchedShowDto> filtered = dtos.stream().filter(s -> !isHidden(s.show.ids.traktId)).collect(Collectors.toList());
+        List<WatchedShowDto> filtered = dtos.stream().filter(s -> !isShowHidden(s.show.ids.traktId)).collect(Collectors.toList());
         return filtered;
     }
 
-    private boolean isHidden(int traktId) {
+    private boolean isShowHidden(int traktId) {
 
-        List<HiddenShowDto> hiddenShows = getHiddenShows();
+        List<HiddenMediaDto> hiddenShows = getHiddenShows();
         return hiddenShows.stream()
                 .anyMatch(h -> h.show.ids.traktId == traktId);
 
     }
 
-    public List<HiddenShowDto> getHiddenShows() {
-        List<HiddenShowDto> dtos = cacheClient.get("hiddenShows", () -> http.get(
-                "https://api.trakt.tv/users/hidden/progress_watched?type=show&limit=1000",
-                traktToken,
-                new TypeReference<List<HiddenShowDto>>() {}));
+    private boolean isMovieHidden(int traktId) {
+
+        List<HiddenMediaDto> hiddenShows = getHiddenMovies();
+        return hiddenShows.stream()
+                .anyMatch(h -> h.show.ids.traktId == traktId);
+
+    }
+
+    public List<HiddenMediaDto> getHiddenMovies() {
+        String type = "movie";
+        return getHidden(type, new TypeReference<List<HiddenMediaDto>>() {});
+    }
+    public List<HiddenMediaDto> getHiddenShows() {
+        String type = "show";
+        return getHidden(type, new TypeReference<List<HiddenMediaDto>>() {});
+    }
+
+    private List<HiddenMediaDto> getHidden(String type, TypeReference<List<HiddenMediaDto>> typeLiteral) {
+        List<HiddenMediaDto> dtos = cacheClient.get("hidden:"+type, () -> {
+            return http.get(
+                    "https://api.trakt.tv/users/hidden/progress_watched?type=" + type + "&limit=1000",
+                    traktToken,
+                    typeLiteral);
+        });
 
         return dtos;
     }
@@ -133,5 +153,23 @@ public class TraktTvClient {
 
     private static String getEpisodeCacheKey(int traktId, int season, int number) {
         return "episode/"+ traktId +"/"+season+"/"+number;
+    }
+
+    public void hideMovie(int traktId) {
+        throw new RuntimeException("Not implemented");
+    }
+
+    public List<WatchListMovieDto> getWatchlistMovies() {
+        List<WatchListMovieDto> dtos = http.get(
+                "https://api.trakt.tv/sync/watchlist/movies",
+                traktToken,
+                new TypeReference<List<WatchListMovieDto>>() {});
+
+        List<WatchListMovieDto> filtered = dtos.stream().filter(s -> !isMovieHidden(s.movie.ids.traktId)).collect(Collectors.toList());
+        return filtered;
+    }
+
+    public void markMovieAsWatched(int traktId) {
+        throw new RuntimeException("Not implemented");
     }
 }
