@@ -6,18 +6,18 @@ import java.time.format.DateTimeFormatter;
 
 public class MarkMovieDto {
 
-    private final SendMovieDto episode;
+    private final SendMovieDto movie;
     private final int progress = 100;
     private final String app_version = "1.0";
     private final String app_date;
 
     public MarkMovieDto(Instant instant, int movieTraktId) {
         this.app_date = DateTimeFormatter.ofPattern("YYYY-MM-dd").withZone(ZoneId.systemDefault()).format(instant);
-        this.episode = new SendMovieDto(movieTraktId);
+        this.movie = new SendMovieDto(movieTraktId);
     }
 
-    public SendMovieDto getEpisode() {
-        return episode;
+    public SendMovieDto getMovie() {
+        return movie;
     }
 
     public int getProgress() {

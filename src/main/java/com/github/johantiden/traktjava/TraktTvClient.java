@@ -3,7 +3,7 @@ package com.github.johantiden.traktjava;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.johantiden.traktjava.cache.CacheClient;
-import com.github.johantiden.traktjava.dto.AddHiddenMovieDto;
+import com.github.johantiden.traktjava.dto.SendMoviesDto;
 import com.github.johantiden.traktjava.dto.AddHiddenShowDto;
 import com.github.johantiden.traktjava.dto.EpisodeDto;
 import com.github.johantiden.traktjava.dto.HiddenMediaDto;
@@ -11,7 +11,7 @@ import com.github.johantiden.traktjava.dto.MarkEpisodeDto;
 import com.github.johantiden.traktjava.dto.MarkMovieDto;
 import com.github.johantiden.traktjava.dto.ShowProgressDto;
 import com.github.johantiden.traktjava.dto.ShowSummaryDto;
-import com.github.johantiden.traktjava.dto.StrangeInnerMovieDto;
+import com.github.johantiden.traktjava.dto.FullMovieDto;
 import com.github.johantiden.traktjava.dto.WatchListMovieDto;
 import com.github.johantiden.traktjava.dto.WatchedShowDto;
 import com.github.johantiden.traktjava.internal.EpisodeId;
@@ -63,7 +63,7 @@ public class TraktTvClient {
 
         List<HiddenMediaDto> hiddenShows = getHiddenMovies();
         return hiddenShows.stream()
-                .anyMatch(h -> h.show.ids.traktId == traktId);
+                .anyMatch(h -> h.movie.ids.traktId == traktId);
 
     }
 
@@ -110,7 +110,7 @@ public class TraktTvClient {
     }
 
     public EpisodeDto getEpisode(int traktId, int season, int number) {
-        return cacheClient.get("getEpisode/"+traktId+"/"+season+"/"+number, () -> {
+        return cacheClient.get("getMovie/"+traktId+"/"+season+"/"+number, () -> {
             Preconditions.checkArgument(season >= 0);
             Preconditions.checkArgument(number > 0);
             try {
@@ -167,7 +167,7 @@ public class TraktTvClient {
     public void hideMovie(int traktId) {
         http.post("https://api.trakt.tv/users/hidden/" + RECOMMENDATIONS,
                 traktToken,
-                new AddHiddenMovieDto(traktId));
+                new SendMoviesDto(traktId));
 
         http.delete("https://api.trakt.tv/recommendations/movies/" + traktId,
                 traktToken);
@@ -178,13 +178,13 @@ public class TraktTvClient {
 
     }
 
-    public List<StrangeInnerMovieDto> getWatchlistMovies() {
+    public List<FullMovieDto> getWatchlistMovies() {
         List<WatchListMovieDto> dtos = http.get(
-                "https://api.trakt.tv/sync/watchlist/movies",
+                "https://api.trakt.tv/sync/watchlist/movies?extended=full",
                 traktToken,
                 new TypeReference<List<WatchListMovieDto>>() {});
 
-        List<StrangeInnerMovieDto> filtered = dtos.stream()
+        List<FullMovieDto> filtered = dtos.stream()
                 .filter(s -> !isMovieHidden(s.movie.ids.traktId))
                 .map(dto -> dto.movie)
                 .collect(Collectors.toList());
@@ -199,15 +199,54 @@ public class TraktTvClient {
         log.error("TODO: CLEAR CACHE!");
     }
 
-    public List<StrangeInnerMovieDto> getMovieRecommendations() {
-        List<StrangeInnerMovieDto> dtos = http.get(
-                "https://api.trakt.tv/recommendations/movies?limit=100",
+    public List<FullMovieDto> getMovieRecommendations() {
+        List<FullMovieDto> dtos = http.get(
+                "https://api.trakt.tv/recommendations/movies?limit=100&extended=full",
                 traktToken,
-                new TypeReference<List<StrangeInnerMovieDto>>() {});
+                new TypeReference<List<FullMovieDto>>() {});
 
-        List<StrangeInnerMovieDto> filtered = dtos.stream()
+        List<FullMovieDto> filtered = dtos.stream()
                 .filter(m -> !isMovieHidden(m.ids.traktId))
                 .collect(Collectors.toList());
         return filtered;
+    }
+
+    public List<FullMovieDto> getPopularMovies() {
+        List<FullMovieDto> dtos = http.get(
+                "https://api.trakt.tv/movies/popular?limit=100&extended=full",
+                traktToken,
+                new TypeReference<List<FullMovieDto>>() {});
+
+        List<FullMovieDto> filtered = dtos.stream()
+                .filter(m -> !isMovieHidden(m.ids.traktId))
+                .collect(Collectors.toList());
+        return filtered;
+    }
+
+    public boolean isMovieWatched(int traktId) {
+        List<Object> dtos = http.get(
+                "https://api.trakt.tv/sync/history/movies/"+traktId,
+                traktToken,
+                new TypeReference<List<Object>>() {});
+
+        boolean watched = !dtos.isEmpty();
+        return watched;
+
+    }
+
+    public void addMovieToWatchList(int traktId) {
+        http.post("https://api.trakt.tv/sync/watchlist",
+                traktToken, new SendMoviesDto(traktId));
+
+        cacheClient.delete(getHiddenCacheKey("movie"));
+        cacheClient.delete(getShowCacheKey(traktId));
+    }
+
+    public void removeMovieFromWatchList(Integer traktId) {
+        http.post("https://api.trakt.tv/sync/watchlist/remove",
+            traktToken, new SendMoviesDto(traktId));
+
+        cacheClient.delete(getHiddenCacheKey("movie"));
+        cacheClient.delete(getShowCacheKey(traktId));
     }
 }

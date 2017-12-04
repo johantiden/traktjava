@@ -6,11 +6,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class WatchListMovieDto {
 
 
-    public final StrangeInnerMovieDto movie;
+    public final FullMovieDto movie;
 
     @JsonCreator
     public WatchListMovieDto(
-            @JsonProperty("movie") StrangeInnerMovieDto movie,
+            @JsonProperty("movie") FullMovieDto movie,
             @JsonProperty("type") String type // "show"
     ) {
         this.movie = movie;

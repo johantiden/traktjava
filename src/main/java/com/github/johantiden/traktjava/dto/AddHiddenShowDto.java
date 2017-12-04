@@ -6,13 +6,13 @@ import java.util.List;
 
 public class AddHiddenShowDto {
 
-    public List<SendShowDto> shows;
+    public List<SendItemDto> shows;
 
     public AddHiddenShowDto(int traktId) {
-        shows = Lists.newArrayList(new SendShowDto(traktId));
+        shows = Lists.newArrayList(new SendItemDto(traktId));
     }
 
-    public List<SendShowDto> getShows() {
+    public List<SendItemDto> getShows() {
         return shows;
     }
 }

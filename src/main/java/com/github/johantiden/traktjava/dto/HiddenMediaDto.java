@@ -9,26 +9,29 @@ public class HiddenMediaDto {
 
     public final Date hiddenAt;
     public final String type;
-    public final InnerShowDto show;
+    public final InnerMediaDto show;
+    public final InnerMediaDto movie;
 
     @JsonCreator
     public HiddenMediaDto(
             @JsonProperty("hidden_at") Date hiddenAt,
             @JsonProperty("type") String type,
-            @JsonProperty("show") InnerShowDto show
+            @JsonProperty("show") InnerMediaDto show,
+            @JsonProperty("movie") InnerMediaDto movie
     ) {
         this.hiddenAt = hiddenAt;
         this.type = type;
         this.show = show;
+        this.movie = movie;
     }
     
-    public static class InnerShowDto {
+    public static class InnerMediaDto {
         public final String title;
         public final int year;
         public final IdsDto ids;
 
         @JsonCreator
-        public InnerShowDto(
+        public InnerMediaDto(
                 @JsonProperty("title") String title,
                 @JsonProperty("year") int year,
                 @JsonProperty("ids") IdsDto ids

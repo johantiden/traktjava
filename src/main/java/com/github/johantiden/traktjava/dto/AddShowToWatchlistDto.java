@@ -6,13 +6,13 @@ import java.util.List;
 
 public class AddShowToWatchlistDto {
 
-    public final List<SendShowDto> shows;
+    public final List<SendItemDto> shows;
 
     public AddShowToWatchlistDto(int traktId) {
-        shows = Lists.newArrayList(new SendShowDto(traktId));
+        shows = Lists.newArrayList(new SendItemDto(traktId));
     }
 
-    public List<SendShowDto> getShows() {
+    public List<SendItemDto> getShows() {
         return shows;
     }
 }
